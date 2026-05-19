@@ -41,7 +41,7 @@ class Vector2d {
 }
 
 /** #### 범용 사용 클래스 */
-class JKUtility {
+class JKUtilityBase {
     ; MARK: 전역 변수 단
     
     /** @type {String} */
