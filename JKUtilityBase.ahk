@@ -63,6 +63,38 @@ class JKUtilityBase {
     
     ; MARK: 전역 함수 단
 
+    ; @@ 데이터에 큰 따옴표가 직접 들어가면 "" 으로 표기되서 망가질 수 있음. 개선여지
+    ; CSV 한 줄 파싱
+    static ParseCSVLine(line) 
+    {
+        result := []
+        currentField := ""
+        ; 현재 "" 안에 있음 여부
+        inQuotes := false
+        
+        loop parse, line 
+        {
+            char := A_LoopField
+            
+            ; 따옴표를 만나면 상태를 반전
+            if (char == '"') 
+                inQuotes := !inQuotes
+            ; 따옴표 밖에서 쉼표를 만나면 필드 구분
+            else if (char == ',' && !inQuotes) 
+            {
+                result.Push(currentField)
+                currentField := ""
+            } 
+            ; 그 외의 문자는 필드에 추가
+            else 
+                currentField .= char
+        }
+
+        ; 마지막 필드 추가
+        result.Push(currentField) 
+        return result
+    }
+
     /**
      * #### 시트 데이터 구조체로 변환하기
      * *
@@ -72,31 +104,32 @@ class JKUtilityBase {
      */
     static LoadSheetData(csvFilePath)
     {
-        ; csv 데이터
         csvData := FileRead(csvFilePath, "UTF-8")
-        
+
         ; 행 분리
-        rows := StrSplit(csvData, "`r`n")
+        rows := StrSplit(csvData, "`n", "`r")
     
         ; 헤더 가져오기
-        headers := StrSplit(rows[1], ",")
+        headers := this.ParseCSVLine(rows[1])
     
         ; 시트 구분해서 구조체(map을 가진 배열)에 저장
         data := []
         
-        for i, row in rows {
-            if(i = 1)
+        for i, row in rows 
+        {
+            if(i = 1 || row = "")
                 continue
-    
-            rowData := StrSplit(row, ",")
-            ; 행 데이터 구조체화
-            field := Map()
+
+            rowData := this.ParseCSVLine(row)
             
-            for index, header in headers
+            field := Map()
+            for index, header in headers 
             {
-                field[header] := rowData[index]
+                ; rowData[index]가 존재하면 넣고, 없으면 빈 값 처리
+                field[header] := (rowData.Has(index) 
+                                ? rowData[index] : "")
             }
-    
+
             data.Push(field)
         }
     
