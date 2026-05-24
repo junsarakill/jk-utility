@@ -100,9 +100,9 @@ class JKUtilityBase {
      * *
      * @see JKUtility.LoadPrioritySheetData | 실사용할때는 이 함수로
      * @param {String} csvFilePath - 시트 전체 경로
-     * @returns {Array} - 배열 { 맵[헤더] : 값 } 시트 데이터
+     * @returns {Map} - 배열 { 맵[헤더] : 값 } 시트 데이터
      */
-    static LoadSheetData(csvFilePath)
+    static LoadSheetData(csvFilePath, keyHeader := "")
     {
         csvData := FileRead(csvFilePath, "UTF-8")
 
@@ -111,9 +111,12 @@ class JKUtilityBase {
     
         ; 헤더 가져오기
         headers := this.ParseCSVLine(rows[1])
+        ; 마스터 키 가져오기
+        if(keyHeader = "")
+            keyHeader := headers[1]
     
         ; 시트 구분해서 구조체(map을 가진 배열)에 저장
-        data := []
+        dataMap := Map()
         
         for i, row in rows 
         {
@@ -123,17 +126,25 @@ class JKUtilityBase {
             rowData := this.ParseCSVLine(row)
             
             field := Map()
+            masterKey := unset
             for index, header in headers 
             {
                 ; rowData[index]가 존재하면 넣고, 없으면 빈 값 처리
-                field[header] := (rowData.Has(index) 
-                                ? rowData[index] : "")
+                value := (rowData.Has(index) 
+                        ? rowData[index] : "")
+
+                ; 마스터 키의 값 가져오기
+                if(header = keyHeader)
+                    masterKey := value                
+                ; class 로 변환 고려해서 헤더, 값을 전부 저장
+                field[header] := value
             }
 
-            data.Push(field)
+            if(IsSet(masterKey))
+                dataMap[masterKey] := field
         }
     
-        return data
+        return dataMap
     }
     
     /**
@@ -141,7 +152,7 @@ class JKUtilityBase {
      * *
      * @param {String} csvFolderPath - 시트 폴더 경로
      * @param {String} csvFileName - 시트 파일 이름 (확장자 없이)
-     * @returns {Array} - 시트 데이터를 배열 { 맵[헤더] : 값 } 형태로 반환
+     * @returns {Map} - 시트 데이터를 배열 { 맵[헤더] : 값 } 형태로 반환
      * @example 
      * sheetData := this.LoadPrioritySheetData(path, name)
      * for row in sheetData
@@ -149,7 +160,7 @@ class JKUtilityBase {
      *     someValue := row["header"]
      * }
      */
-    static LoadPrioritySheetData(csvFolderPath, csvFileName)
+    static LoadPrioritySheetData(csvFolderPath, csvFileName, keyHeader := "")
     {
         /** 탐색순서
          * {folderPath}/{fileName}.{ext} (분리없는 파일)
@@ -186,7 +197,7 @@ class JKUtilityBase {
         if(csvPath != "")
         {
             ; 해당 경로로 시트 데이터 받기
-            sheetData := this.LoadSheetData(csvPath)
+            sheetData := this.LoadSheetData(csvPath, keyHeader)
         }
         ; 결과 리턴
     
@@ -225,6 +236,28 @@ class JKUtilityBase {
         return newClassIns
     }
 
+    ; 
+    ; 
+    /**
+     * #### MaterKeyMap 을 maptocalss로 변환
+     * 
+     * @description {@link JKUtilityBase.LoadSheetData} 에서 반환하는 마스터키를 가진 맵의 값들을 클래스로 변환해서 가지는 맵으로 반환 | 구조 Map[ 마스터키 : 클래스 ]
+     * @param {Map} masterMap - 마스터맵
+     * @param {Class} classType - 변환할 클래스
+     * @returns {Map} - 변환된 클래스 인스턴스 맵
+     */
+    static MasterMapToClassMap(masterMap, classType)
+    {
+        classInsMap := Map()
+        for masterKey, rowMap in masterMap
+        {
+            ; 각 행의 map을 클래스 변환
+            classInsMap[masterKey] := JKUtilityBase.MapToClass(rowMap, classType)
+        }
+
+        return classInsMap
+    }
+
     /**
      * #### 디버그 로그 용 메시지 출력
      * *
@@ -242,5 +275,37 @@ class JKUtilityBase {
 
         OutputDebug(fullMsg) ; 디버그 뷰어용
         try FileAppend(fullMsg, "*") ; VS Code 터미널(Stdout) 출력용
+    }
+
+    /**
+     * #### , 가 들어간 string이 들어간 데이터를 배열로 변환해주는 재귀
+     * *
+     * @param {Object} data - , 가 들어간 string이 있는 맵, 배열, 문자열
+     * @returns {Object} - 변환된 데이터
+     */
+    static ConvertCommaStringToAry(data)
+    {
+        if(data is Map)
+        {
+            for key, value in data
+            {
+                data[key] := this.ConvertCommaStringToAry(value)
+            }
+        }
+        else if(data is Array)
+        {
+            for i, value in data
+            {
+                data[i] := this.ConvertCommaStringToAry(value)
+            }
+        }
+        ; 문자열일 경우 배열 변환
+        else if(Type(data) = "String" && InStr(data, ","))
+        {
+            return StrSplit(data, ",")
+        }
+        
+        ; 결과물 or 비대상 데이터 반환
+        return data
     }
 }
