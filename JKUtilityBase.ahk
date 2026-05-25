@@ -3,8 +3,8 @@
 /************************************************************************
  * @description 유용한 전역 기능들
  * @author JKAKK
- * @date 2026/05/19
- * @version 0.0.2
+ * @date 2026/05/25
+ * @version 0.0.3
  ***********************************************************************/
 
 /** x,y 2차원 자료구조 */
@@ -63,44 +63,33 @@ class JKUtilityBase {
     
     ; MARK: 전역 함수 단
 
-    ; @@ 데이터에 큰 따옴표가 직접 들어가면 "" 으로 표기되서 망가질 수 있음. 개선여지
-    ; CSV 한 줄 파싱
+    /**
+     * #### CSV 한 줄 파싱
+     * *
+     * @description row 안 값에 , 나 " 가 있을 경우를 처리
+     * @param {String} line - csv row 한 개
+     * @returns {Array} - 파싱된 배열
+     */
     static ParseCSVLine(line) 
     {
+        /** @type {Array} */
         result := []
-        currentField := ""
-        ; 현재 "" 안에 있음 여부
-        inQuotes := false
-        
-        loop parse, line 
+
+        loop parse, line, "CSV"
         {
-            char := A_LoopField
-            
-            ; 따옴표를 만나면 상태를 반전
-            if (char == '"') 
-                inQuotes := !inQuotes
-            ; 따옴표 밖에서 쉼표를 만나면 필드 구분
-            else if (char == ',' && !inQuotes) 
-            {
-                result.Push(currentField)
-                currentField := ""
-            } 
-            ; 그 외의 문자는 필드에 추가
-            else 
-                currentField .= char
+            result.Push(A_LoopField)
         }
 
-        ; 마지막 필드 추가
-        result.Push(currentField) 
         return result
     }
 
     /**
-     * #### 시트 데이터 구조체로 변환하기
+     * #### 시트 데이터를 마스터키를 가진 맵으로 불러오기
      * *
      * @see JKUtility.LoadPrioritySheetData | 실사용할때는 이 함수로
      * @param {String} csvFilePath - 시트 전체 경로
-     * @returns {Map} - 배열 { 맵[헤더] : 값 } 시트 데이터
+     * @param {String} keyHeader - 마스터키로 할 col 이름 | 비지정 시 첫 번째 헤더로 자동 지정
+     * @returns {Map} - 맵 [마스터키헤더 : {맵[헤더] : 값}]
      */
     static LoadSheetData(csvFilePath, keyHeader := "")
     {
@@ -110,8 +99,9 @@ class JKUtilityBase {
         rows := StrSplit(csvData, "`n", "`r")
     
         ; 헤더 가져오기
+        /** @type {Array} */
         headers := this.ParseCSVLine(rows[1])
-        ; 마스터 키 가져오기
+        ; 마스터 키 지정 없으면 가져오기
         if(keyHeader = "")
             keyHeader := headers[1]
     
@@ -122,11 +112,11 @@ class JKUtilityBase {
         {
             if(i = 1 || row = "")
                 continue
-
+            /** @type {Array} */
             rowData := this.ParseCSVLine(row)
-            
             field := Map()
             masterKey := unset
+
             for index, header in headers 
             {
                 ; rowData[index]가 존재하면 넣고, 없으면 빈 값 처리
@@ -149,24 +139,24 @@ class JKUtilityBase {
     
     /**
      * #### 우선 순위 있는 시트 데이터 불러오기
-     * *
+     * 
+     * @description 로컬 설정 및 공통 기본값 파일의 우선순위를 고려하여 
+     * 시트 데이터를 탐색하고 구조체로 변환하여 불러옵니다.
+     * 
+     * **[파일 탐색 순서]**
+     * 1. `{folderPath}/{fileName}.{ext}` (분리 없는 파일 - 최우선)
+     * 2. `{folderPath}/{fileName}.local.{ext}` (개별 설정 파일)
+     * 3. `{folderPath}/{fileName}.default.{ext}` (공통 기본값 파일 - 최하위)
      * @param {String} csvFolderPath - 시트 폴더 경로
      * @param {String} csvFileName - 시트 파일 이름 (확장자 없이)
-     * @returns {Map} - 시트 데이터를 배열 { 맵[헤더] : 값 } 형태로 반환
+     * @param {String} keyHeader - 마스터키로 할 col 이름 | 비지정 시 첫 번째 헤더로 자동 지정
+     * @returns {Map} - 맵 [마스터키헤더 : {맵[헤더] : 값}]
      * @example 
-     * sheetData := this.LoadPrioritySheetData(path, name)
-     * for row in sheetData
-     * {
-     *     someValue := row["header"]
-     * }
+     * sheetData := JKUtilityBase.LoadPrioritySheetData(path, name)
+     * name := sheetData["keyHeader"]["name"]
      */
     static LoadPrioritySheetData(csvFolderPath, csvFileName, keyHeader := "")
     {
-        /** 탐색순서
-         * {folderPath}/{fileName}.{ext} (분리없는 파일)
-        {folderPath}/{fileName}.local.{ext} (개별 설정)
-        {folderPath}/{fileName}.default.{ext} (공통 기본값)
-         */
         priorityAry := [
             ""
             ,".local"
@@ -175,7 +165,7 @@ class JKUtilityBase {
     
         ; 조합될 경로
         csvPath := ""
-        ; 배열로 해서 포 돌리기
+        ; 우선순위 순 파일 탐색
         for curPR in priorityAry
         {
             ; 경로 조합
@@ -189,22 +179,25 @@ class JKUtilityBase {
                 break
             }
         }
-    
-        ; 반환할 시트 데이터
-        sheetData := []
-    
-        ; 경로 유효 확인
-        if(csvPath != "")
+
+        /** 반환할 시트 데이터  
+         * @type {Map} 
+         */
+        sheetData := Map()
+
+        ; 경로 설정 확인
+        if(csvPath = "")
         {
-            ; 해당 경로로 시트 데이터 받기
-            sheetData := this.LoadSheetData(csvPath, keyHeader)
+            JKUtility.Log("경로 문제 발생, 폴더 경로 : " csvFolderPath " 파일 이름 : " csvFileName)
+            return sheetData
         }
-        ; 결과 리턴
     
+        ; 해당 경로로 시트 데이터 받기
+        sheetData := this.LoadSheetData(csvPath, keyHeader)
+
         return sheetData
     }
     
-    ; vs code 디버그할때는 vs code를 관리자 권한으로 실행
     ; 관리자 권한 체크 및 재실행
     static RunAdmin()
     {
@@ -224,31 +217,34 @@ class JKUtilityBase {
      */
     static MapToClass(mapData, classType) 
     {
-        local newClassIns := classType() ; 클래스 인스턴스 생성
+        ; 클래스 인스턴스 생성
+        local newClassIns := classType() 
 
-        for key, value in mapData {
+        for key, value in mapData 
+        {
             local strKey := String(key)
 
             if (newClassIns.HasProp(strKey)) 
-                newClassIns.%strKey% := value ; Map의 값을 클래스 속성으로 설정
+                ; Map의 값을 클래스 속성으로 설정
+                newClassIns.%strKey% := value 
         }
 
         return newClassIns
     }
 
-    ; 
-    ; 
     /**
      * #### MaterKeyMap 을 maptocalss로 변환
      * 
-     * @description {@link JKUtilityBase.LoadSheetData} 에서 반환하는 마스터키를 가진 맵의 값들을 클래스로 변환해서 가지는 맵으로 반환 | 구조 Map[ 마스터키 : 클래스 ]
+     * @description {@link JKUtilityBase.LoadSheetData} 에서 반환하는 마스터키를 가진 맵의 값들을 클래스로 변환해서 가지는 맵으로 반환 
      * @param {Map} masterMap - 마스터맵
      * @param {Class} classType - 변환할 클래스
-     * @returns {Map} - 변환된 클래스 인스턴스 맵
+     * @returns {Map} - Map[ 마스터키 : 클래스] 변환된 클래스 인스턴스 맵
      */
     static MasterMapToClassMap(masterMap, classType)
     {
+        /** @type {Map} */
         classInsMap := Map()
+
         for masterKey, rowMap in masterMap
         {
             ; 각 행의 map을 클래스 변환
@@ -271,39 +267,48 @@ class JKUtilityBase {
         logLocation := Error("", -1)
         SplitPath(logLocation.File, &fileName)
 
-        fullMsg := msg . " <== [ " . fileName . ":" . logLocation.Line . "]`n" 
+        fullMsg := msg " <== [ " fileName ":" logLocation.Line "]`n" 
 
-        OutputDebug(fullMsg) ; 디버그 뷰어용
-        try FileAppend(fullMsg, "*") ; VS Code 터미널(Stdout) 출력용
+        ; 디버그 뷰어용
+        OutputDebug(fullMsg) 
+        ; VS Code 터미널(Stdout) 출력용
+        try FileAppend(fullMsg, "*") 
     }
 
     /**
-     * #### , 가 들어간 string이 들어간 데이터를 배열로 변환해주는 재귀
-     * *
-     * @param {Object} data - , 가 들어간 string이 있는 맵, 배열, 문자열
-     * @returns {Object} - 변환된 데이터
+     * #### 쉼표 문자열 배열 변환후 변환된 데이터 반환
+     * @description , 가 들어간 string이 들어간 데이터를 배열로 변환해주는 재귀
+     * 
+     * @param {Object|String} data - , 가 들어간 string이 있는 맵, 배열, 문자열
+     * @returns {Object|String} - 변환된 데이터
+     * @example data := JKUtility.ConvertCommaStringToAry(data)
      */
     static ConvertCommaStringToAry(data)
     {
         if(data is Map)
         {
+            ; 원본 Map의 오염 및 순회 중 수정 에러를 방지하기 위해 새 Map 생성
+            resMap := Map()
             for key, value in data
             {
-                data[key] := this.ConvertCommaStringToAry(value)
+                resMap[key] := this.ConvertCommaStringToAry(value)
             }
+
+            return resMap
         }
         else if(data is Array)
         {
-            for i, value in data
+            ; 원본 Array의 오염을 방지하기 위해 새 Array 생성
+            resAry := []
+            for , value in data
             {
-                data[i] := this.ConvertCommaStringToAry(value)
+                resAry.Push(this.ConvertCommaStringToAry(value))
             }
+            return resAry
         }
-        ; 문자열일 경우 배열 변환
-        else if(Type(data) = "String" && InStr(data, ","))
-        {
-            return StrSplit(data, ",")
-        }
+        ; 쉼표 포함 문자열일 경우 배열 변환
+        else if(data is String && InStr(data, ","))
+            return StrSplit(data, ",", " ")
         
         ; 결과물 or 비대상 데이터 반환
         return data
