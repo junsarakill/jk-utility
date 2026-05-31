@@ -86,7 +86,7 @@ class JKUtilityBase {
     /**
      * #### 시트 데이터를 마스터키를 가진 맵으로 불러오기
      * *
-     * @see JKUtility.LoadPrioritySheetData | 실사용할때는 이 함수로
+     * @see JKUtilityBase.LoadPrioritySheetData | 실사용할때는 이 함수로
      * @param {String} csvFilePath - 시트 전체 경로
      * @param {String} keyHeader - 마스터키로 할 col 이름 | 비지정 시 첫 번째 헤더로 자동 지정
      * @returns {Map} - 맵 [마스터키헤더 : {맵[헤더] : 값}]
@@ -233,7 +233,7 @@ class JKUtilityBase {
     }
 
     /**
-     * #### MaterKeyMap 을 maptocalss로 변환
+     * #### MaterKeyMap 을 maptocalss로 변환한 맵으로 변환
      * 
      * @description {@link JKUtilityBase.LoadSheetData} 에서 반환하는 마스터키를 가진 맵의 값들을 클래스로 변환해서 가지는 맵으로 반환 
      * @param {Map} masterMap - 마스터맵
@@ -252,6 +252,27 @@ class JKUtilityBase {
         }
 
         return classInsMap
+    }
+
+    /**
+     * #### MaterKeyMap 을 maptocalss로 변환한 배열로 변환
+     * 
+     * @description {@link JKUtilityBase.LoadSheetData} 에서 반환하는 마스터키를 가진 맵의 값들을 클래스로 변환해서 가지는 배열로 반환 
+     * @param {Map} masterMap - 마스터맵
+     * @param {Class} classType - 변환할 클래스
+     * @returns {Array} - Array[클래스] 변환된 클래스 인스턴스 배열
+     */
+    static MasterMapToClassAry(masterMap, classType)
+    {
+        /** @type {Array} */
+        classAry := []
+
+        for , rowMap in masterMap
+        {
+            classAry.Push(JKUtilityBase.MapToClass(rowMap,classType))
+        }
+
+        return classAry
     }
 
     /**
