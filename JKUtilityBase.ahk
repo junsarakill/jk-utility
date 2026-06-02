@@ -213,23 +213,63 @@ class JKUtilityBase {
      * *
      * @param {Map} mapData - 변환할 map 데이터
      * @param {Class} classType - 반환할 클래스 타입
+     * @param {Array} newArgs - 생성자에 넣을 값들
      * @returns {Class} - 변환된 클래스 데이터
      */
-    static MapToClass(mapData, classType) 
+    static MapToClass(mapData, classType, newArgs*) 
     {
         ; 클래스 인스턴스 생성
-        local newClassIns := classType() 
+        local newClassIns := classType(newArgs*) 
 
         for key, value in mapData 
         {
             local strKey := String(key)
 
-            if (newClassIns.HasProp(strKey)) 
-                ; Map의 값을 클래스 속성으로 설정
-                newClassIns.%strKey% := value 
+            ; 재귀 탐색해서 속성에 값 주입
+            if(!this.AssignValueToProp(newClassIns, strKey, value))
+            {
+                ; 탐색 실패함
+                JKUtilityBase.Log("해당 프로퍼티 주입 실패 : 클래스 타입 " Type(classType) " 프로퍼티명 " strKey " 값 " value)
+            }
         }
 
         return newClassIns
+    }
+
+    ; 객체를 재귀적으로 탐색하며 프로퍼티 이름 일치하면 값 주입
+    static AssignValueToProp(targetObj, targetKey, value)
+    {
+        ; 프로퍼티 존재 확인
+        if(targetObj.HasProp(targetKey))
+        {
+            ; 값 주입
+            targetObj.%targetKey% := value
+
+            return true
+        }
+
+        ; 없다면, 현재 객체에 서브 클래스 존재 탐색
+        for propName in targetObj.OwnProps()
+        {
+            local propObj := targetObj.%propName%
+
+            ; 객체면 내부 진입
+            if(IsObject(propObj) 
+            && !(propObj is Map) 
+            && !(propObj is Array)
+            && !(propObj is Func)
+            && !(propObj is Buffer)
+            )
+            {
+                if(this.AssignValueToProp(propObj, targetKey, value))
+                {
+                    return true
+                }
+            }
+        }
+
+        ; 해당 프로퍼티 탐색 실패
+        return false
     }
 
     /**
