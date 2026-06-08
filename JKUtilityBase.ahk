@@ -374,4 +374,25 @@ class JKUtilityBase {
         ; 결과물 or 비대상 데이터 반환
         return data
     }
+
+
+    ; 시스템 커서를 완전히 끄고 켜는 토글 함수
+    static SetVisibleCursor(value)
+    {
+        
+        ; OCR_NORMAL (일반 화살표 커서 ID)
+        static OCR_NORMAL := 32512
+        
+        if (!value)
+        {
+            ; 빈 커서(투명)를 생성합니다.
+            blankCursor := DllCall("CreateCursor", "Ptr", 0, "Int", 0, "Int", 0, "Int", 32, "Int", 32, "Ptr", Buffer(128, 0xFF), "Ptr", Buffer(128, 0x00))
+            
+            ; 현재 화살표 커서를 투명 커서로 교체합니다.
+            DllCall("SetSystemCursor", "Ptr", blankCursor, "Int", OCR_NORMAL)
+        }
+        else
+            ; 시스템 기본 커서들을 원상복구(Reload)합니다.
+            DllCall("SystemParametersInfo", "UInt", 0x0057, "UInt", 0, "Ptr", 0, "UInt", 0)
+    }
 }
