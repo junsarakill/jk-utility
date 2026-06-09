@@ -375,24 +375,45 @@ class JKUtilityBase {
         return data
     }
 
-
-    ; 시스템 커서를 완전히 끄고 켜는 토글 함수
+    /**
+     * #### 시스템 커서 표시
+     * * @param {Bool} value - 표시 유무
+     */
     static SetVisibleCursor(value)
     {
-        
         ; OCR_NORMAL (일반 화살표 커서 ID)
         static OCR_NORMAL := 32512
-        
+        ; 원래 커서의 복사본을 저장할 static 변수
+        static orgCursorCopy := 0
+
         if (!value)
         {
-            ; 빈 커서(투명)를 생성합니다.
-            blankCursor := DllCall("CreateCursor", "Ptr", 0, "Int", 0, "Int", 0, "Int", 32, "Int", 32, "Ptr", Buffer(128, 0xFF), "Ptr", Buffer(128, 0x00))
+            ; 이미 커서가 숨겨져 있다면 중복 실행 방지
+            if (orgCursorCopy != 0)
+                return
+
+            curCursorHwnd := DllCall("GetCursor", "Ptr")
             
-            ; 현재 화살표 커서를 투명 커서로 교체합니다.
+            ; 원래 커서가 사라지지 않도록 복사본을 만들어 둡니다.
+            orgCursorCopy := DllCall("CopyIcon", "Ptr", curCursorHwnd, "Ptr")
+
+            ; 완전히 투명한 빈 커서를 생성합니다. | (CreateCursor 대신 시스템이 제공하는 안전한 빈 커서 마스크 활용)
+            blankCursor := DllCall("CreateCursor", "Ptr", 0, "Int", 0, "Int", 0, "Int", 32, "Int", 32, "Ptr", Buffer(32 * 4, 0xFF).Ptr, "Ptr", Buffer(32 * 4, 0x00).Ptr, "Ptr")
+
+            ; 시스템 커서를 빈 커서로 교체합니다. (이때 blankCursor는 시스템에 의해 자동 관리됩니다)
             DllCall("SetSystemCursor", "Ptr", blankCursor, "Int", OCR_NORMAL)
         }
-        else
-            ; 시스템 기본 커서들을 원상복구(Reload)합니다.
+        ; 백업해 둔 원래 커서가 있을 때만 복구 진행
+        else if(orgCursorCopy != 0)
+        {
+            ; 파괴되었던 시스템 커서 자리에 백업해 둔 원래 커서를 집어넣습니다.
+            DllCall("SetSystemCursor", "Ptr", orgCursorCopy, "Int", OCR_NORMAL)
+            
+            ; 시스템 커서 변경 사항을 전역에 적용하고 새로고침합니다.
             DllCall("SystemParametersInfo", "UInt", 0x0057, "UInt", 0, "Ptr", 0, "UInt", 0)
+            
+            ; 핸들 변수 초기화
+            orgCursorCopy := 0
+        }
     }
 }
