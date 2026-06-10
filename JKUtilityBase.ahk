@@ -337,12 +337,12 @@ class JKUtilityBase {
     }
 
     /**
-     * #### 쉼표 문자열 배열 변환후 변환된 데이터 반환
+     * #### 쉼표 문자열 배열 변환
      * 
      * @description , 가 들어간 string이 들어간 데이터를 배열로 변환해주는 재귀
      * @param {Map|Array|String} data - , 가 들어간 string이 있는 맵, 배열, 문자열
      * @returns {Map|Array|String} - 변환된 데이터
-     * @example data := JKUtility.ConvertCommaStringToAry(data)
+     * @example convertedData := JKUtility.ConvertCommaStringToAry(data)
      */
     static ConvertCommaStringToAry(data)
     {
