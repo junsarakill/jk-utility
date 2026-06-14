@@ -8,7 +8,8 @@
  ***********************************************************************/
 
 /** x,y 2차원 자료구조 */
-class Vector2d {
+class Vector2d 
+{
     /** @type {Number} */
     x := 0
 
@@ -41,7 +42,8 @@ class Vector2d {
 }
 
 /** #### 범용 사용 클래스 */
-class JKUtilityBase {
+class JKUtilityBase 
+{
     ; MARK: 전역 변수 단
     
     /** @type {String} */
@@ -85,11 +87,10 @@ class JKUtilityBase {
 
     /**
      * #### 시트 데이터를 마스터키를 가진 맵으로 불러오기
-     * *
      * @see JKUtilityBase.LoadPrioritySheetData | 실사용할때는 이 함수로
      * @param {String} csvFilePath - 시트 전체 경로
      * @param {String} keyHeader - 마스터키로 할 col 이름 | 비지정 시 첫 번째 헤더로 자동 지정
-     * @returns {Map} - 맵 [마스터키헤더 : {맵[헤더] : 값}]
+     * @returns {Map<String, Map<String, String>>} - 맵 [마스터키헤더 : {맵[헤더] : 값}]
      */
     static LoadSheetData(csvFilePath, keyHeader := "")
     {
@@ -150,7 +151,7 @@ class JKUtilityBase {
      * @param {String} csvFolderPath - 시트 폴더 경로
      * @param {String} csvFileName - 시트 파일 이름 (확장자 없이)
      * @param {String} keyHeader - 마스터키로 할 col 이름 | 비지정 시 첫 번째 헤더로 자동 지정
-     * @returns {Map} - 맵 [마스터키헤더 : {맵[헤더] : 값}]
+     * @returns {Map<Stirng, Map<String,String>>} - 맵 [마스터키헤더 : {맵[헤더] : 값}]
      * @example 
      * sheetData := JKUtilityBase.LoadPrioritySheetData(path, name)
      * name := sheetData["keyHeader"]["name"]
@@ -278,7 +279,7 @@ class JKUtilityBase {
      * @description {@link JKUtilityBase.LoadSheetData} 에서 반환하는 마스터키를 가진 맵의 값들을 클래스로 변환해서 가지는 맵으로 반환 
      * @param {Map} masterMap - 마스터맵
      * @param {Class} classType - 변환할 클래스
-     * @returns {Map} - Map[ 마스터키 : 클래스] 변환된 클래스 인스턴스 맵
+     * @returns {Map<String, Class>} - Map[ 마스터키 : 클래스] 변환된 클래스 인스턴스 맵
      */
     static MasterMapToClassMap(masterMap, classType)
     {
