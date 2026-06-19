@@ -16,7 +16,6 @@ class Vector2d
     /** @type {Number} */
     y := 0
 
-    ; 생성자
     /**
      * #### 생성자
      * *
@@ -29,6 +28,21 @@ class Vector2d
         this.y := y
     }
 
+    ; * 연산자
+    Multiply(other)
+    {
+        if(other is Vector2d)
+        {
+            return Vector2d(this.x * other.x
+                            ,this.y * other.y)
+        }
+        else if(other is Number)
+        {
+            return Vector2d(this.x * other
+                            ,this.y * other)
+        }
+    }
+
     IsEqual(&other)
     {
         return this.x == other.x 
@@ -38,6 +52,14 @@ class Vector2d
     ToString()
     {
         return Format("x : {1}, y : {2}", this.x, this.y)
+    }
+
+    ; hwnd 받아서 해당 창의 크기를 가져옴.
+    static WinGetClientSize(targetHwnd)
+    {
+        WinGetClientPos(, , &outW, &outH, targetHwnd)
+
+        return Vector2d(outW, outH)
     }
 }
 
