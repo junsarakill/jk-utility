@@ -180,28 +180,8 @@ class JKUtilityBase
      */
     static LoadPrioritySheetData(csvFolderPath, csvFileName, keyHeader := "")
     {
-        priorityAry := [
-            ""
-            ,".local"
-            ,".default"
-        ]
-    
-        ; 조합될 경로
-        csvPath := ""
-        ; 우선순위 순 파일 탐색
-        for curPR in priorityAry
-        {
-            ; 경로 조합
-            curCSVPath := csvFolderPath . csvFileName . curPR . this.SHEET_EXT
-    
-            ; 존재확인 
-            if(FileExist(curCSVPath))
-            {
-                ; 있으면 해당 경로 확정 포 종료
-                csvPath := curCSVPath
-                break
-            }
-        }
+        ; 파일 경로
+        csvPath := this.GetPriorityFilePath(csvFolderPath, csvFileName)
 
         /** 반환할 시트 데이터  
          * @type {Map} 
@@ -432,5 +412,43 @@ class JKUtilityBase
             ; 복사본 제거
             orgCursorCopy := 0
         }
+    }
+
+    /**
+     * #### 우선 순위 있는 파일 탐색
+     * **[파일 탐색 순서]**
+     * 1. `{folderPath}/{fileName}.{ext}` (분리 없는 파일 - 최우선)
+     * 2. `{folderPath}/{fileName}.local.{ext}` (개별 설정 파일)
+     * 3. `{folderPath}/{fileName}.default.{ext}` (공통 기본값 파일 - 최하위)
+     * @param {String} csvFolderPath - 시트 폴더 경로
+     * @param {String} csvFileName - 시트 파일 이름 (확장자 없이)
+     * @returns {String} - 파일 전체 경로
+     */
+    static GetPriorityFilePath(csvFolderPath, csvFileName)
+    {
+        static priorityAry := [
+            ""
+            ,".local"
+            ,".default"
+        ]
+
+        ; 조합될 경로
+        csvPath := ""
+        ; 우선순위 순 파일 탐색
+        for curPR in priorityAry
+        {
+            ; 경로 조합
+            curCSVPath := csvFolderPath . csvFileName . curPR . this.SHEET_EXT
+    
+            ; 존재확인 
+            if(FileExist(curCSVPath))
+            {
+                ; 있으면 해당 경로 확정 포 종료
+                csvPath := curCSVPath
+                break
+            }
+        }
+
+        return csvPath
     }
 }
