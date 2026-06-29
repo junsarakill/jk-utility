@@ -191,7 +191,7 @@ class JKUtilityBase
         ; 경로 설정 확인
         if(csvPath = "")
         {
-            JKUtility.Log("경로 문제 발생, 폴더 경로 : " csvFolderPath " 파일 이름 : " csvFileName)
+            JKUtilityBase.Log("경로 문제 발생, 폴더 경로 : " csvFolderPath " 파일 이름 : " csvFileName)
             return sheetData
         }
     
