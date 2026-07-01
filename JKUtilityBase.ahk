@@ -333,8 +333,8 @@ class JKUtilityBase
 
         fullMsg := msg " <== [ " fileName ":" logLocation.Line "]`n" 
 
-        ; 디버그 뷰어용
-        OutputDebug(fullMsg) 
+        ; ; 디버그 뷰어용
+        ; OutputDebug(fullMsg) 
         ; VS Code 터미널(Stdout) 출력용
         try FileAppend(fullMsg, "*") 
     }
