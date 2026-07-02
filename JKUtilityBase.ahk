@@ -451,4 +451,16 @@ class JKUtilityBase
 
         return csvPath
     }
+
+    static CallMulticastDel(delAry, params*)
+    {
+        if(!delAry || !HasMethod(delAry, "__Enum"))
+            return
+
+        for callback in delAry
+        {
+            if(HasMethod(callback, "Call"))
+                callback(params*)
+        }
+    }
 }
