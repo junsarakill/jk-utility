@@ -180,28 +180,8 @@ class JKUtilityBase
      */
     static LoadPrioritySheetData(csvFolderPath, csvFileName, keyHeader := "")
     {
-        priorityAry := [
-            ""
-            ,".local"
-            ,".default"
-        ]
-    
-        ; 조합될 경로
-        csvPath := ""
-        ; 우선순위 순 파일 탐색
-        for curPR in priorityAry
-        {
-            ; 경로 조합
-            curCSVPath := csvFolderPath . csvFileName . curPR . this.SHEET_EXT
-    
-            ; 존재확인 
-            if(FileExist(curCSVPath))
-            {
-                ; 있으면 해당 경로 확정 포 종료
-                csvPath := curCSVPath
-                break
-            }
-        }
+        ; 파일 경로
+        csvPath := this.GetPriorityFilePath(csvFolderPath, csvFileName)
 
         /** 반환할 시트 데이터  
          * @type {Map} 
@@ -211,7 +191,7 @@ class JKUtilityBase
         ; 경로 설정 확인
         if(csvPath = "")
         {
-            JKUtility.Log("경로 문제 발생, 폴더 경로 : " csvFolderPath " 파일 이름 : " csvFileName)
+            JKUtilityBase.Log("경로 문제 발생, 폴더 경로 : " csvFolderPath " 파일 이름 : " csvFileName)
             return sheetData
         }
     
@@ -353,8 +333,8 @@ class JKUtilityBase
 
         fullMsg := msg " <== [ " fileName ":" logLocation.Line "]`n" 
 
-        ; 디버그 뷰어용
-        OutputDebug(fullMsg) 
+        ; ; 디버그 뷰어용
+        ; OutputDebug(fullMsg) 
         ; VS Code 터미널(Stdout) 출력용
         try FileAppend(fullMsg, "*") 
     }
@@ -434,7 +414,12 @@ class JKUtilityBase
         }
     }
 
-    ; 적은 시간까지 지속되는 툴팁
+    /**
+     * #### 지속 시간 있는 툴팁
+     * @param {String} text - 툴팁 텍스트
+     * @param {Number} duration - 지속시간
+     * @returns {void} - 
+     */
     static JKTooltip(text := "", duration := 0)
     {
         ; 최신 툴팁 검사용 토큰
@@ -452,6 +437,55 @@ class JKUtilityBase
                 (thisToken = curToken) ? ToolTip() : 0
             ), -duration)
         }
+    }
 
+    /**
+     * #### 우선 순위 있는 파일 탐색
+     * **[파일 탐색 순서]**
+     * 1. `{folderPath}/{fileName}.{ext}` (분리 없는 파일 - 최우선)
+     * 2. `{folderPath}/{fileName}.local.{ext}` (개별 설정 파일)
+     * 3. `{folderPath}/{fileName}.default.{ext}` (공통 기본값 파일 - 최하위)
+     * @param {String} csvFolderPath - 시트 폴더 경로
+     * @param {String} csvFileName - 시트 파일 이름 (확장자 없이)
+     * @returns {String} - 파일 전체 경로
+     */
+    static GetPriorityFilePath(csvFolderPath, csvFileName)
+    {
+        static priorityAry := [
+            ""
+            ,".local"
+            ,".default"
+        ]
+
+        ; 조합될 경로
+        csvPath := ""
+        ; 우선순위 순 파일 탐색
+        for curPR in priorityAry
+        {
+            ; 경로 조합
+            curCSVPath := csvFolderPath . csvFileName . curPR . this.SHEET_EXT
+    
+            ; 존재확인 
+            if(FileExist(curCSVPath))
+            {
+                ; 있으면 해당 경로 확정 포 종료
+                csvPath := curCSVPath
+                break
+            }
+        }
+
+        return csvPath
+    }
+
+    static CallMulticastDel(delAry, params*)
+    {
+        if(!delAry || !HasMethod(delAry, "__Enum"))
+            return
+
+        for callback in delAry
+        {
+            if(HasMethod(callback, "Call"))
+                callback(params*)
+        }
     }
 }
