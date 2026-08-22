@@ -433,4 +433,25 @@ class JKUtilityBase
             orgCursorCopy := 0
         }
     }
+
+    ; 적은 시간까지 지속되는 툴팁
+    static JKTooltip(text := "", duration := 0)
+    {
+        ; 최신 툴팁 검사용 토큰
+        static curToken := 0
+
+        ToolTip(text)
+        curToken++
+        thisToken := curToken
+
+        ; 지속 시간 기입시 제거하는 타이머 바인딩
+        if(duration)
+        {
+            SetTimer(() => (
+                ; 타이머 실행 시점에 내 토큰이 여전히 '최신 토큰'인 경우에만 끄기
+                (thisToken = curToken) ? ToolTip() : 0
+            ), -duration)
+        }
+
+    }
 }
