@@ -135,6 +135,26 @@ class JKEnum
     {
         static GetPeakValue => 3
     }
+
+    class AddressFamily
+    {
+        static IPv4 => 2
+        static IPv6 => 23
+    }
+
+    class SocketType
+    {
+        ; tcp
+        static STREAM => 1
+        ; udp
+        static DGRAM => 2
+    }
+
+    class SocketProtocol
+    {
+        static TCP => 6
+        static UDP => 17
+    }
 }
 
 /** #### 범용 사용 클래스 */
