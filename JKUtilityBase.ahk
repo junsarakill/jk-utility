@@ -63,6 +63,80 @@ class Vector2d
     }
 }
 
+class JKEnum
+{
+    ; 오디오 데이터 흐름 방향
+    class EDataFlow
+    {
+        ; 재생 장치
+        static eRender => 0
+        ; 녹음 장치
+        static eCapture => 1
+    }
+
+    ; 오디오 역할
+    class ERole
+    {
+        /**
+         * Index: 0 (기본 시스템 장치: 일반 게임, 음성 입력, 앱 소리 등)
+         */
+        static eConsole => 0
+
+        /**
+         * Index: 1 (멀티미디어 장치: 음악/동영상 전용)
+         */
+        static eMultimedia => 1
+
+        /**
+         * Index: 2 (통신 전용 장치: 디스코드, 줌, 통화용 헤드셋 등)
+         */
+        static eCommunications => 2
+    }
+
+    class IMMDevice
+    {
+        static Activate => 3
+    }
+
+    class IMMDeviceEnumerator
+    {
+        static GetDefaultAudioEndpoint => 4
+    }
+
+    class IAudioClient
+    {
+        ; 생성
+        static Initialize => 3
+        ; 오디오 포맷 가져오기
+        static GetMixFormat => 8
+        ; 시작
+        static Start => 10
+        ; 중단
+        static Stop => 11
+    }
+
+    ; COM 실행 컨텍스트
+    class CLSCTX
+    {
+        static INPROC_SERVER  => 0x1
+        static INPROC_HANDLER => 0x2
+        static LOCAL_SERVER   => 0x4
+        static REMOTE_SERVER  => 0x10
+        static ALL            => 0x17
+    }
+
+    class AUDCLNT_SHAREMODE
+    {
+        ; 공유 모드 | 기존 오디오 엔진과 공유
+        static SHARED => 0
+    }
+
+    class IAudioMeterInformation
+    {
+        static GetPeakValue => 3
+    }
+}
+
 /** #### 범용 사용 클래스 */
 class JKUtilityBase 
 {
