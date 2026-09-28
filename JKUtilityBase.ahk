@@ -155,6 +155,12 @@ class JKEnum
         static TCP => 6
         static UDP => 17
     }
+
+    class WM
+    {
+        ; 디스플레이 및 세션 변경 관련
+        static DISPLAYCHANGE => 0x007E
+    }
 }
 
 /** #### 범용 사용 클래스 */
