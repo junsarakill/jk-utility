@@ -161,6 +161,34 @@ class JKEnum
         ; 디스플레이 및 세션 변경 관련
         static DISPLAYCHANGE => 0x007E
     }
+
+    class VARTYPE
+    {
+        ; unsign int 4 byte
+        static UI4 => 19
+    }
+
+    class GETPROPERTYSTOREFLAGS
+    {
+        static DEFAULT => 0x00000000
+        static READWRITE => 0x00000002
+    }
+
+    class IUnknown
+    {
+        static QueryInterface => 0
+        static AddRef => 1
+        static Release => 2
+    }
+
+    class IPropertyStore
+    {
+        static GetCount => 3
+        static GetAt => 4
+        static GetValue => 5
+        static SetValue => 6
+        static Commit => 7
+    }
 }
 
 /** #### 범용 사용 클래스 */
